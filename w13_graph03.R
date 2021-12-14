@@ -1,7 +1,5 @@
-df <- read.csv("HD_2001.csv") 
-# 分享時改寫成 library(readr)
-# read_csv("repository_links")
-
+library(readr)
+df <- read.csv("https://github.com/jhchou97/110-1-Economic-Data-Visualization/blob/main/HD_2001.csv") 
 
 library(tidyverse)
 
@@ -31,7 +29,7 @@ qtr <- c("01\nQ1","","","","02","","","","03","","","","04","","","","2005\nQ1",
          "06","","","","07","","","","08","","","","09","","","","2010\nQ1","","","",
          "11","","","","12","","","","13","","","","14","","","","2015\nQ1","","","",
          "16","","","","17","","","","18","","","","19","","","","2020\nQ1","","","",
-         "21\nQ1") #\n 表示換行
+         "21\nQ1") #\n 換行
 
 ####################################
 #  Ratio_HDRE_HD                   #
@@ -85,10 +83,3 @@ ggplot(data = df,
       hjust = 0.0,
       color = "grey20")
     )
-
-
-
-plot1
-
-plot1 |> plotly::ggplotly()
-
