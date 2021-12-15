@@ -25,61 +25,92 @@ Quarter <- as.data.frame.Date(quarter)
 df <- cbind.data.frame(Year, Quarter, t, df)
 
 
-qtr <- c("01\nQ1","","","","02","","","","03","","","","04","","","","2005\nQ1","","","",
-         "06","","","","07","","","","08","","","","09","","","","2010\nQ1","","","",
-         "11","","","","12","","","","13","","","","14","","","","2015\nQ1","","","",
-         "16","","","","17","","","","18","","","","19","","","","2020\nQ1","","","",
-         "21\nQ1") #\n 換行
-
 ####################################
-#  Ratio_HDRE_HD                   #
+#       Ratio_HDRE_HD              #
 ####################################
 ggplot(data = df,
        aes(x = t))+
   geom_col(
    aes(y = HD_RE/1000000*8),
    width = 0.2,
-   fill = "royalblue1",
+   fill = "khaki",
    #色票 http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
-   alpha = 0.35 
+   alpha = 0.6 
   )+
   geom_line(
     aes(y = HD_RE/HD*100),
     size = 1,
-    color = "royalblue4")+
+    color = "navy"
+  )+
+  geom_vline(
+    xintercept = c(2010,2012),
+    color = "grey20",
+    size = 0.5,
+    lty = "dashed"
+  )+
   scale_y_continuous(
-    name = "佔總借款餘額比例 (%)",
+    name = "購置不動產借款餘額\n佔總借款餘額比例 (%)", #\n 表示換行
     expand = c(0,0),
     sec.axis = 
-     sec_axis(~./8,
-              name = "不動產借款餘額 (兆)")
+     sec_axis(~./8
+            ,name = "購置不動產借款餘額 (兆)"
+            )
+    # 老師講義 5.3.2
+    # https://tpemartin.github.io/economic-data-visualization-2021/scale.html
   )+
   expand_limits(y = 80)+
   scale_x_continuous(
     name = "季別",
     expand = c(0,0),
-    breaks = seq(2001, 2021, by = 0.25),
-    labels = qtr
+    breaks = c(2001,
+      2005,2010,2012,2015,2020,
+               # seq(2005, 2020, by = 5),
+      2021),
+    labels = c("01\nQ1","2005\nQ1","2010\nQ1","12\nQ1","2015\nQ1","2020\nQ1",
+             "21\nQ1")
+  # https://github.com/tpemartin/110-1-Economic-Data-Visualization/blob/main/double-y-economist-timeline.Rmd  
   )+
-  labs(title = "個人 (或家庭) 購置不動產之借款餘額",
-       caption = "* 個人 (或家庭) 借款餘額係指全體銀行對個人放款餘額，\n按用途可分為「購置不動產」、「購置動產」、「週轉金」\n與「企業投資」四類。圖中僅呈現購置不動產一項。\n資料來源：中央銀行金融統計月報。"
+  labs(title = "個人 (或家庭) 購置不動產之借款餘額\n\n",
+       caption = "* 個人 (或家庭) 借款餘額係指全體銀行對個人放款餘額，按用途可分為「購置不動產」、「購置動產」、\n「週轉金」與「企業投資」四類。圖中僅呈現購置不動產一項。資料來源：中央銀行金融統計月報。"
   )+
   theme(
-    axis.title.x = element_text(size = 10), 
-    axis.line.y.left = element_line(color = "royalblue4"),
-    axis.ticks.y.left = element_line(color = "royalblue4"),
-    axis.text.y.left = element_text(color = "royalblue4"),
-    #axis.title.y.left = element_text(color = "royalblue4"),
-    axis.line.y.right = element_line(color = "royalblue1"),
-    axis.ticks.y.right = element_line(color = "royalblue1"),
-    axis.text.y.right = element_text(color = "royalblue1"),
-    #axis.title.y.right = element_text(color = "royalblue1"),
+    axis.title.x = 
+      element_text(
+        size = 8,
+        hjust = 1.08,
+        vjust = 0
+        ), 
+    axis.line.y.left  = element_blank(),
+    axis.line.y.right = element_blank(),
+    axis.ticks.y.left = element_blank(),
+    axis.ticks.y.right = element_blank(),
+    axis.text.y.left = element_text(color = "navy"),
+    axis.text.y.right = element_text(color = "khaki3"),
+    axis.title.y.left = 
+      element_text(
+        color = "navy",
+        size = 8,
+        angle = 0,
+        margin = margin(r = -58),
+        hjust = 0,
+        vjust = 1.2
+      ),
+    axis.title.y.right = 
+      element_text(
+        color = "khaki3",
+        size = 8,
+        angle = 0,
+        margin = margin(l = -63),
+        vjust = 1.12
+      ),
+    panel.grid.major.y = element_line(color = "#ececec"),
     plot.title = element_text(
-      hjust = 0.5
+      hjust = 0.5,
+      vjust = 0.1
     ),
     plot.caption = element_text(
       size = 8, 
-      vjust = 8,
-      hjust = 0.0,
-      color = "grey20")
+      vjust = 4,
+      hjust = 0,
+      color = "grey18")
     )
