@@ -3,7 +3,7 @@ mp$sf$get_sf_taiwan_simplified() ->
   sf_taiwan_simplified
 
 econDV2::Object(demo)
-demo$df <- read_csv("2020NOV_district.csv")
+demo$df <- read.csv("https://github.com/jhchou97/110-1-Economic-Data-Visualization/blob/main/2020NOV_district.csv") 
 demo$df |>
   mutate(訊號量 = NIGHT_WORK - NIGHT_WEEKEND) %>%
   group_by(TOWN)-> demo$df
