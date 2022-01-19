@@ -1,9 +1,3 @@
-setwd("D:/3_NTPU/110-1-data-visualization/110-1-course")
-library(tidyverse)
-library(RColorBrewer)
-####################################################
-#  電信信令人口統計之建置、分析與應用(內政部2020)  #
-####################################################
 mp <- econDV2::Map()
 mp$sf$get_sf_taiwan_simplified() ->
   sf_taiwan_simplified
