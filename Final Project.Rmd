@@ -1,0 +1,358 @@
+---
+title: "期末專題"
+author: "周茹襄"
+date: "2022/1/26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, cache = T, warning = F, message = F, 
+  fig.showtext=T)
+library(sf)
+library(ggplot2)
+library(showtext)
+sysfonts::font_add_google('Noto Sans TC')
+showtext_auto()
+theme_set(
+  theme(
+    text=element_text(family = "Noto Sans TC")
+  )+
+    theme_classic()
+)
+
+
+library(econDV2)
+gg <- list(
+  dash = econDV2::ggdash,
+  geom = econDV2::ggbrowse,
+  aes = econDV2::ggaes
+)
+
+library(ggmap)
+```
+
+
+### 臺灣家庭借款置產的時序變化
+ * 截至 2021Q1 臺灣家庭借款餘額的用途按金額大小分為：購置不動產 (65.08%)、週轉金 (34.92%)、購置動產 (1.30%) 以及企業投資 (0.37%) 四類，前兩項用途合計已逾整體借款餘額的 98%。
+ * 圖 1 可見 2003 年起銀行對家庭放款流向不動產市場的金額幾乎連年上升，購置不動產佔總借款餘額比例亦長年維持 60% 之上，並在 2010Q1 有 75.21% 的高點，說明家庭借款餘額逐年攀升興許為不動產市場活絡所致。而 圖 1 後半也指出，自 2011 年起，購置不動產借款餘額上升、對總借款餘額占比下降同時發生，加上 2010Q1 的高點剛好在 2007-2009 年全球金融海嘯之後，臺灣家庭借款置產的熱度似乎與景氣循環連動。
+```{r}
+df <- list()
+df$HD2001 <- readr::read_csv("HD_2001.csv") 
+
+ts(data = df$HD2001,
+   start = c(2001,1), end = c(2021,1),
+   frequency = 4) -> A
+
+time(A) %>%
+  zoo::as.yearqtr() -> t
+
+time <- as.data.frame.Date(t)
+
+year <- zoo::as.yearqtr(time(A)) %>% 
+  format.Date("%Y")
+
+Year <- as.data.frame.Date(year)
+
+quarter <- cycle(A)
+Quarter <- as.data.frame.Date(quarter)
+
+df$HD2001<- cbind.data.frame(Year, Quarter, t, df$HD2001)
+
+```
+
+```{r, fig.align="center", fig.show='asis', cache=TRUE, fig.width=7, fig.height=4}
+ggplot(data = df$HD2001,
+       aes(x = t))+
+  geom_col(
+   aes(y = HD_RE/1000000*8),
+   width = 0.2,
+   fill = "khaki",
+   alpha = 0.6 
+  )+
+  geom_line(
+    aes(y = HD_RE/HD*100),
+    size = 1,
+    color = "navy"
+  )+
+  geom_vline(
+    xintercept = 2010,
+    color = "grey70",
+    size = 0.5,
+    lty = "dashed"
+  )+
+  scale_y_continuous(
+    name = "購置不動產借款餘額\n佔總借款餘額比例 (%)",
+    expand = c(0,0),
+    sec.axis = 
+     sec_axis(~./8
+            ,name = "購置不動產借款\n餘額 (兆)"
+            )
+      )+
+  expand_limits(y = 80)+
+  scale_x_continuous(
+    name = "季別",
+    expand = c(0,0),
+    breaks = c(2001,
+      2005,2010,2012,2015,2020,
+      2021),
+    labels = c("01\nQ1","2005\nQ1","2010\nQ1","12\nQ1","2015\nQ1","2020\nQ1",
+             "21\nQ1")
+  )+
+  labs(title = "圖1 個人 (或家庭) 購置不動產之借款餘額\n\n\n",
+       caption = "* 個人 (或家庭) 借款餘額係指全體銀行對個人放款餘額，按用途可分為「購置不動產」、「購置動產」、\n「週轉金」與「企業投資」四類。圖中僅呈現購置不動產一項。資料來源：中央銀行金融統計月報。"
+  )+
+  theme(
+    axis.title.x = 
+      element_text(
+        size = 10,
+        hjust = 1,
+        vjust = 0
+        ), 
+    axis.line.y.left  = 
+      element_blank(),
+    axis.line.y.right =
+      element_blank(),
+    axis.ticks.y.left = 
+      element_blank(),
+    axis.ticks.y.right = 
+      element_blank(),
+    axis.text.y.left = 
+      element_text(color = "navy"),
+    axis.text.y.right = 
+      element_text(color = "khaki4"),
+    axis.title.y.left = 
+      element_text(
+        color = "navy",
+        size = 10,
+        angle = 0,
+        margin = margin(r = -95),
+        hjust = 0, #input$hjust
+        vjust = 1.3
+      ),
+    axis.title.y.right = 
+      element_text(
+        color = "khaki4",
+        size = 10,
+        angle = 0,
+        margin = margin(l = -65),
+        hjust = 1,
+        vjust = 1.3
+      ),
+    panel.grid.major.y = element_line(color = "#ececec"),
+    plot.title = element_text(
+      hjust = 0.5,
+      vjust = 0.1
+    ),
+    plot.caption = element_text(
+      size = 9, 
+      vjust = 0,
+      hjust = 0,
+      #color = "grey18"
+      )
+    )
+
+```
+
+
+
+
+### 臺灣都會區房價成長率
+* 「新屋、預售屋房價指數」為內政部住宅統計所收錄國泰房地產價格指數內的可能成交指數，透過成交價格波動狀況判斷市場成交行情，含預售及新成屋物件；而「中古屋房價指數」則是信義房屋的全臺都會區季指數，採樣範圍含公寓、華廈及電梯大樓等純住產品，並排除預售物件、具備其他用途之住宅物件與偏差樣本 (工業住宅、屋齡偏高之成交物件)。兩項指數均透過產學合作，以公司內部的仲介成交資料為基礎，利用特徵價格函數 (Hedonic Price Model) 理論配合拉氏指數公式 (Laspeyres) 編製而成，分別在全臺的新成屋、預售屋市場及國內純住中古屋市場具有指標性。
+
+* 統一將房價指數基期調整為 2016 年，繪製成 圖2 將發現臺灣六大都會區 (雙北、桃竹、臺中與高雄) 房價在 2019Q4 至 2020Q4 均為正成長。其中，以桃園市為新屋、預售屋房價年成長最高者 (11.3%)，而新竹縣市的中古屋房價年成長為 13.5%，遠超過臺灣全區的 6.5%。
+
+* 圖2 各都會區房價年成長，又以新竹、高雄、臺中、新北等地區之中古屋漲幅比率遠大於新屋、預售屋；臺北市則以新屋、預售屋的房價年成長為大，或許是北部開發較早，土地所剩無幾，也可能是新建案內的高價住宅所致。
+```{r, cache=T,  fig.align="center", fig.show ='asis', fig.width=7.2, fig.height=5}
+df$HP <- readr::read_csv("HPI.csv")
+
+# class(HP$date)
+
+df$HP |>
+  dplyr::filter(date == "2020Q4") -> df$HP
+
+ggplot(data = df$HP)+
+  geom_point(
+    aes(
+      x = old,
+      y = new
+    ),
+    color = "turquoise",
+    size = 10,
+    alpha = 0.8
+  )+
+  expand_limits(y = 0,x = 14)+
+  scale_x_continuous(
+    name = "中古屋房價年成長 (%)",
+    breaks = seq(from = 6, to = 12, by = 2)
+  )+
+  scale_y_continuous(
+    name = " 新屋、預售屋\n 房價年成長 (%)",
+    breaks = seq(from = 0, to = 9, by = 3)
+  )+geom_vline(
+    xintercept = 14,
+    color = "#ececec",
+    size = 0.5
+  )+
+  geom_hline(
+    yintercept = 12,
+    color ="#ececec",
+    size = 0.5
+  )+
+  ggrepel::geom_text_repel(
+    aes(
+      x = old,
+      y = new,
+      label = area
+    )
+  )+
+  labs(title = "圖2 2020Q4 臺灣都會區房價年成長率",
+       caption ="* 新屋、預售屋房價指數指「國泰房地產指數之可能成交指數」； 中古屋房價指數為「信義 \n  房價指數」。資料來源：內政部住宅統計、信義房訊知識。"
+  )+
+  theme_void()+
+  theme(
+    axis.text.x = 
+      element_text( color = "khaki4"),
+    axis.title.x = 
+      element_text(
+        size = 11,
+        hjust = 1,
+        vjust = 4.8,
+        color = "khaki4"
+      ), 
+    axis.text.y = 
+      element_text(color = "navy"),
+    axis.title.y = 
+      element_text(
+        color = "navy",
+        size = 11,
+        angle = 0,
+        margin = margin(r = -45, t = -40, b = -40),
+        hjust = 0,
+        vjust = 0.95
+      ),
+    panel.grid.major = element_line(color = "#ececec"),
+    plot.title = element_text(
+      hjust = 0.5,
+      vjust = 2,
+      size = 15
+    ),
+    plot.caption = element_text(
+      hjust = 0,
+      vjust = 1,
+      size = 12
+    )
+  )
+```
+
+
+
+### 臺灣實際居住與戶籍人口差異
+* 參考「電信信令人口統計之建置、分析與應用」(內政部統計處，2021)，電信業者 (中華電、台哥大與遠傳) 於 109 年 11 月，將扣除企業戶之電信信令用戶資料以 10 分鐘為單位，記錄電信使用人口最常出現之所在經緯度位置，且最小統計區約為 1/20 個村里，而資料期間則細分為平日及假日兩種。
+
+* 而「夜間停留用戶數」則是電信業者將 19:00~07:00 期間，用戶之電信信令最常出現的最小統計區，視為該用戶之夜間停留地，並統計各最小統計區的所有用戶數而取得。
+
+* 若以夜間停留用戶數表示實際居住人口，將能配合戶籍人口取得人口「淨流入(%)」。以週間而言，將可能因為工作或學業而使文教地區或是產業重鎮產生「淨流入(%)」，由 圖3 可知，出現淨流入的區域多於北部、西部，以及東部零星的沿海地區。
+* 觀察 圖3，實居人口超過戶籍人口兩倍的區域有新竹新豐、寶山、竹東，苗栗竹南，四個行政區就有三個隸屬新竹，剛好呼應 圖2  新竹的房價高成長率。而實居人口超過戶籍人口 1 倍的地區則是彰化的員林、二林。
+```{r}
+library(sf)
+mp <- econDV2::Map()
+mp$sf$get_sf_taiwan_simplified() ->
+  sf_taiwan_simplified
+
+econDV2::Object(Net_inflow)
+Net_inflow$df <- readr::read_csv("FLOW.csv")
+Net_inflow$df |>
+  dplyr::mutate(淨流入 = (NIGHT_WORK - REGISTERED)/REGISTERED*100) %>%
+  dplyr::filter(淨流入 >=0) -> Net_inflow$df
+
+
+
+# class(Net_inflow$df$淨流入)
+
+Left <- sf_taiwan_simplified$台灣本島$鄉鎮區
+Right <- Net_inflow$df 
+
+Net_inflow$join <-{
+  Left %>%
+    dplyr::left_join(
+      Right, by = c("name" = "TOWN")
+    )
+}
+
+# summary(Net_inflow$join$淨流入)
+
+Net_inflow$join$淨流入 |>
+  cut(c(0, 50, 100, 200, 400, 500),
+      ordered_result = T) -> cluster
+
+# class(cluster)
+
+levels(cluster) <- c("0-50%","50-100%","100-200%", "200-400%","400%以上")
+
+Net_inflow$join$淨流入 <- cluster
+
+```
+
+```{r, fig.align="center",  fig.show='asis', cache=TRUE, fig.width=5.745, fig.height=4.8}
+Net_inflow$background$台灣本島$鄉鎮區 <- {
+  sf_taiwan_simplified$台灣本島$鄉鎮區 |>
+    sf::st_cast("MULTIPOLYGON") |>
+    mp$sf$make_background_map(
+      color="white",
+      size=0.3
+    )+theme_void()
+}
+
+Net_inflow$background$台灣本島$鄉鎮區+geom_sf(
+  data = Net_inflow$join,
+  mapping = aes(
+    fill = 淨流入
+  ),
+  color = "white",
+  size = 0.01
+)+
+  scale_fill_brewer(
+    type = "seq",
+    palette = "Greens",
+    na.value="grey90"
+  )+
+  geom_sf_text(
+    data = Net_inflow$join[249,],
+    aes(label = name),
+    hjust = 1.2,
+    vjust = 0,
+    size = 3
+  )+
+  geom_sf_text(
+    data = Net_inflow$join[346,],
+    aes(label = name),
+    hjust = -0.3,
+    vjust = -0.2,
+    size = 3
+  )+
+  geom_sf_text(
+    data = Net_inflow$join[349,],
+    aes(label = name),
+    vjust = 1.2,
+    size = 3
+  )+
+  labs(
+    title = "圖3 2020年11月 臺灣各區週間實際居住與戶籍人口差異",
+    subtitle = "淨流入 = (實際居住人口 ─ 戶籍人口)/戶籍人口*100%",
+    caption = "* 實際居住人口指週間的夜間停留用戶數；週間指週一到週五。\n   資料來源：109年11月行政區電信信令人口統計、鄉鎮戶數及人口數。"
+    )+
+  theme(
+    plot.title = element_text(
+      vjust = -2
+    ),
+    plot.subtitle = element_text(
+      vjust = -2
+    ),
+    plot.caption  = element_text(
+      hjust = 0,
+      vjust = 10
+    )
+  )
+```
+
+
